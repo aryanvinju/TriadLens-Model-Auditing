@@ -1,0 +1,12 @@
+{
+  "name": "triadlens-browser-tests",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test --grep @full",
+    "test:e2e:ci": "playwright test --grep @public",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
