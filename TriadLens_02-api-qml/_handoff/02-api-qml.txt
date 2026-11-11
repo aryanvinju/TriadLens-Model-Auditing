@@ -1,7 +1,0 @@
-TriadLens handoff: 02-api-qml
-Proposed reviewer/committer: Aditya Shetty
-Extract this ZIP into the same new repository root as the other three ZIPs.
-Review and modify the files before committing your actual contribution.
-This allocation does not establish original authorship of every line.
-The public ZIP excludes the private CSV, trained models and row-level reports.
-Read docs/Team_Handoff_and_Test_Plan.md after all four ZIPs are combined.
