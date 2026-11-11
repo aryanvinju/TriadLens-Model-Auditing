@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TriadLens — model audit</title>
+  <meta name="description" content="Audit ML, deep learning and simulated quantum ML on one held-out survey split.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>TriadLens</h1>
+        <p>ML, DL and simulated QML model audit</p>
+      </div>
+      <p id="health" role="status">Checking models…</p>
+    </header>
+    <nav aria-label="Page sections"><a href="#test-audit">Test-set audit</a><a href="#record-audit">Audit a record</a></nav>
+    <p class="notice">Educational survey-label analysis. This is not a diagnosis or a medical risk assessment.</p>
+
+    <section id="test-audit" class="evaluation" aria-labelledby="audit-report-title">
+      <h2 id="audit-report-title">Test-set audit</h2>
+      <p id="audit-summary" class="muted">Loading audit…</p>
+      <dl class="audit-highlights">
+        <div><dt>Model disagreements</dt><dd id="summary-disagreements">—</dd></div>
+        <div><dt>Any model wrong</dt><dd id="summary-any-wrong">—</dd></div>
+        <div><dt>All models wrong</dt><dd id="summary-all-wrong">—</dd></div>
+      </dl>
+      <p id="audit-disagreement" class="muted"></p>
+
+      <h3>Errors by model</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Model</th><th scope="col">Correct NO</th><th scope="col">False YES</th><th scope="col">False NO</th><th scope="col">Correct YES</th></tr></thead>
+        <tbody id="audit-errors"></tbody>
+      </table></div>
+      <p class="muted">These are errors against dataset labels, not observed clinical outcomes.</p>
+
+      <h3>Performance by dataset slice</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Slice</th><th scope="col">Records</th><th scope="col">NO</th><th scope="col">YES</th><th scope="col">ML accuracy</th><th scope="col">DL accuracy</th><th scope="col">QML accuracy</th></tr></thead>
+        <tbody id="slice-body"></tbody>
+      </table></div>
+      <p class="muted">Descriptive slices only. Some groups contain very few NO records; these numbers cannot establish fairness.</p>
+
+      <h3>Overall held-out metrics</h3>
+      <p id="split-note" class="muted">Loading evaluation…</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Model</th><th scope="col">Accuracy</th><th scope="col">Balanced accuracy</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">ROC AUC</th></tr></thead>
+        <tbody id="metrics-body"></tbody>
+      </table></div>
+      <p id="baseline" class="muted"></p>
+    </section>
+
+    <section id="record-audit" class="evaluation" aria-labelledby="record-title">
+      <div class="section-top">
+        <div>
+          <h2 id="record-title">Audit a record</h2>
+          <p class="muted">Load a random held-out record to compare all three predictions with its saved dataset label. Repeated loads avoid records already shown until the selected case pool is exhausted.</p>
+        </div>
+        <div class="sample-controls">
+          <label>Case type<select id="sample-kind"><option value="any">Any test record</option><option value="disagreement">Model disagreement</option><option value="any_error">At least one model wrong</option><option value="all_wrong">All models wrong</option></select></label>
+          <button id="example" type="button">Load random record</button>
+        </div>
+      </div>
+      <p id="sample-info" class="muted">No dataset record loaded.</p>
+      <div class="workspace">
+        <section aria-labelledby="input-title">
+          <h3 id="input-title">Survey inputs</h3>
+          <p class="muted">Binary fields use codes 1 and 2 from the supplied CSV. Their meanings were not provided.</p>
+          <form id="prediction-form">
+            <div class="input-grid">
+              <label>Gender code<select name="GENDER" required><option value="">Select</option><option value="F">F</option><option value="M">M</option></select></label>
+              <label>Age<input type="number" name="AGE" min="0" max="120" step="1" placeholder="60" required></label>
+              {% for feature in binary_features %}
+              <label>{{ feature.replace('_', ' ').title() }}<select name="{{ feature }}" required><option value="">Select code</option><option value="1">1</option><option value="2">2</option></select></label>
+              {% endfor %}
+            </div>
+            <div class="model-choice">
+              <label>Model<select name="model"><option value="ALL">All three</option><option value="ML">ML — Logistic regression</option><option value="DL">DL — Neural network</option><option value="QML">QML — Quantum kernel SVM</option></select></label>
+              <button id="submit" type="submit">Run audit</button>
+            </div>
+          </form>
+          <p id="error" role="alert" hidden></p>
+        </section>
+
+        <section aria-labelledby="results-title">
+          <h3 id="results-title">Case audit</h3>
+          <div class="test-flow" aria-label="Input processing output test flow">
+            <h4>Test flow</h4>
+            <ol>
+              <li><strong>Input</strong><span id="flow-input">No record submitted.</span></li>
+              <li><strong>Processing</strong><span id="flow-processing">Waiting for validated model run.</span></li>
+              <li><strong>Output</strong><span id="flow-output">No prediction yet.</span></li>
+            </ol>
+          </div>
+          <div id="results" aria-live="polite"><p class="muted">Load a dataset record or enter your own values.</p></div>
+          <div id="audit" hidden aria-live="polite"></div>
+          <p id="reference-check" class="muted" hidden></p>
+          <p id="warning" hidden></p>
+          <div id="sensitivity-panel" hidden>
+            <h3>One-field stability</h3>
+            <button id="sensitivity" type="button">Check one-field changes</button>
+            <p id="sensitivity-summary" class="muted"></p>
+            <div class="table-wrap"><table>
+              <thead><tr><th scope="col">Changed field</th><th scope="col">Tested value</th><th scope="col">Models that flipped</th></tr></thead>
+              <tbody id="sensitivity-body"></tbody>
+            </table></div>
+            <p class="muted">These probes change one input code at a time. A label flip is sensitivity, not a causal explanation.</p>
+          </div>
+          <details>
+            <summary>How to read model scores</summary>
+            <p>ML and DL show class YES model scores. QML shows an SVM decision margin, not a probability. Their numerical scores are not directly comparable or calibrated medical risk.</p>
+          </details>
+          <details>
+            <summary>About the quantum model</summary>
+            <p>A four-qubit circuit maps four PCA components into quantum states on a CPU simulator. A classical SVM learns from their similarities. ML and DL use all 15 features. No quantum speed advantage is claimed.</p>
+          </details>
+        </section>
+      </div>
+
+      <h3>Session comparisons</h3>
+      <p class="muted">Each sampled test record stays in this table until the page is refreshed. No audit history is sent to a database.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Record</th><th scope="col">Dataset label</th><th scope="col">ML</th><th scope="col">DL</th><th scope="col">QML</th><th scope="col">Review</th></tr></thead>
+        <tbody id="session-body"><tr id="session-empty"><td colspan="6">No comparisons yet.</td></tr></tbody>
+      </table></div>
+    </section>
+    <footer>TriadLens · fixed held-out split · simulated QML · educational use</footer>
+  </main>
+</body>
+</html>
