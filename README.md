@@ -1,1 +1,209 @@
-# TriadLens Model Auditing
+# TriadLens: ML, DL and QML Disagreement Audit
+
+**Problem statement:** Small, imbalanced survey datasets can conceal disagreement between models when a product reports only one prediction. TriadLens compares classical ML, deep learning and simulated quantum-kernel ML on a common lung-survey split, exposes agreement and out-of-range inputs, and shows held-out results against a majority-class baseline. It is an educational audit portal, not a diagnostic tool.
+
+The project uses **lungcancer.csv** with ML, DL, QML, a Flask web interface, Git, GitHub, GitHub Actions, Docker, a Docker Hub publishing workflow, Kubernetes manifests, an SRS, a System Test Plan and a separate architecture/design specification. The public GitHub repository contains source code and a high-level performance table. The local submission bundle holds row-level data, detailed metrics, derived model artifacts and student-ID PDFs. See [data/README.md](data/README.md) for setup.
+
+## Start here on this computer
+
+Open a terminal in this folder and run:
+
+```powershell
+python app.py
+```
+
+Open **http://127.0.0.1:5000** (or the port printed by Flask). The test-set audit appears first. Under **Audit a record**, choose a case type and click **Load random record**; the portal automatically runs all three models and keeps each sampled result in the session table. Trained models are included in the local submission bundle. A clean public-repository checkout needs the dataset added and `python train.py` run first. You can also double-click `run_lab.cmd`.
+
+With all three models selected, the case audit shows per-model labels, a descriptive majority dataset label, agreement, comparison with the saved test label, and review reasons for disagreement or age extrapolation. A simple **Input / Processing / Output** panel displays what was submitted, which saved models ran, and the resulting labels. A single-model request has no three-model comparison. The test-set audit shows cleaning counts, class balance, false YES/NO counts, pairwise disagreement and descriptive performance by gender-code and age slices. **Check one-field changes** probes label stability for the current record. Agreement is not a clinical vote; one-field probes are not causal explanations.
+
+## Run the quality checks
+
+After installing `requirements.txt`, run `python -m pytest -q`, `python -m pylint --errors-only app.py audit.py core.py quantum.py train.py` (install `pylint==4.1.3` first), and `node --check static/app.js`. Browser tests use Node.js 22 and Playwright 1.62.1: run `npm ci`, `npx playwright install chromium`, start the local app with model artifacts, then run `npm run test:e2e`. On Windows, setting `PLAYWRIGHT_USE_EDGE=1` uses installed Microsoft Edge. `npm run test:e2e:ci` runs an explicitly mocked, data-free UI fixture suitable for the public GitHub Actions workflow. The real-model browser test captures an input-processing-output screenshot under `test-results/`.
+
+The four non-overlapping teammate ZIPs and new-repository assembly steps are described in [Team handoff and test plan](docs/Team_Handoff_and_Test_Plan.md). Each contributor should review and change their assigned files, then commit their actual work from their own account. The new repository and its CI/deployment need fresh verification after assembly.
+
+## Setup on another computer
+
+Use Python 3.13 and an internet connection for the first installation. In PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe train.py
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe app.py
+```
+
+The dependency versions match the environment used to train the included models. A clean installation on another machine has not been verified. If you intentionally change package versions, retrain all models before running the app; serialized scikit-learn models are version-sensitive. Only load the supplied or your own trusted model files.
+
+## What to demonstrate to your teacher
+
+1. Show `data/lungcancer.csv` and explain the input columns and target.
+2. Run `python train.py` and explain the shared train/validation/test split.
+3. Show the three model implementations in `train.py`, `core.py` and `quantum.py`.
+4. Open the app, show the test-set audit, then load a random disagreement case. The models run automatically. Load a shared-error case next and compare both in the session table.
+5. Demonstrate a missing input and explain the API validation tests.
+6. Show the gender-code and age slices, explain their small sample counts, and run the one-field stability check on one case.
+7. Show the held-out evaluation table and explain why the majority-class baseline matters. Run `python -m pytest -q` and show the passing tests.
+8. Follow the Kubernetes steps below on a working local cluster, then capture the real pod and service output.
+9. Submit the SRS, System Test Plan, evaluation evidence, and project code. The private submission PDFs include the four team members and their student IDs; add class and instructor details if required.
+
+## Models and data preparation
+
+| Approach | Implementation | Input | Output rule |
+|---|---|---|---|
+| ML | Scikit-learn logistic regression, balanced class weights | All 15 standardized features | YES score at least 0.5 |
+| DL | PyTorch network 15 → 32 → 16 → 1 with ReLU hidden layers | All 15 standardized features | Sigmoid score at least 0.5 |
+| QML | Four-qubit quantum fidelity kernel plus classical SVM | Four PCA components mapped to angles | SVM predicted class; margin shown separately |
+
+The provided CSV has **309 rows**. Preprocessing strips column whitespace, removes **33 exact duplicate rows**, and excludes **two rows with identical inputs but contradictory labels**. It does not choose one conflicting label over another. The original CSV is kept unchanged. This leaves **274 records**, split with seed 42 into **175 training, 44 validation and 55 test** records using stratification. Reported performance applies to this cleaned subset.
+
+Gender is encoded F=0, M=1. Binary feature codes 1 and 2 become 0 and 1 internally. Their real-world meanings were not supplied, so the UI deliberately labels them **Code 1** and **Code 2**. Do not assume a codebook without confirming it with the teacher. The target is NO=0 and YES=1. All fitted scaling and PCA transformations use training records only. Validation loss selects the DL checkpoint; test records are never used to choose model settings. ML and QML hyperparameters are fixed.
+
+The DL model uses Adam, weighted binary cross-entropy with logits, weight decay, at most 500 epochs, and early stopping after 40 epochs without a sufficient validation improvement. The supplied run selected epoch 37 and stopped at epoch 77.
+
+QML is a **genuine quantum-kernel algorithm simulated with NumPy**, not a classical classifier simply renamed QML. Two rounds of RY and RZ rotations and a CNOT chain prepare a 16-amplitude statevector. The kernel is the squared absolute inner product between two encoded states. A classical SVM trains on that kernel matrix. The four PCA components retain approximately 51.3% of training variance. No Qiskit or PennyLane dependency is required. If your teacher explicitly requires one of those frameworks or actual hardware, that is an additional requirement; this implementation uses an exact CPU simulator.
+
+## Measured results
+
+| Model | Accuracy | Balanced accuracy | Precision | Recall | F1 | ROC AUC |
+|---|---:|---:|---:|---:|---:|---:|
+| ML | 92.73% | 95.83% | 100.00% | 91.67% | 95.65% | 97.02% |
+| DL | 92.73% | 95.83% | 100.00% | 91.67% | 95.65% | 98.81% |
+| QML | 89.09% | 81.55% | 95.65% | 91.67% | 93.62% | 87.80% |
+
+The test set has **7 NO and 48 YES** records. Always predicting YES achieves **87.27% accuracy**, so accuracy alone is insufficient. Confusion matrices use rows=true class and columns=predicted class in the order NO, YES:
+
+- ML and DL: `[[7, 0], [4, 44]]`.
+- QML: `[[5, 2], [4, 44]]`.
+
+This is one small, imbalanced dataset split, not a clinical study. Predicted labels and model scores must not be interpreted as a diagnosis or a calibrated medical risk. QML receives fewer dimensions, so this is a comparison of these implementations, not proof that one entire learning paradigm is superior.
+
+## API
+
+| Method and path | Purpose |
+|---|---|
+| GET `/` | Web interface |
+| POST `/api/predict` | Run ML, DL, QML or ALL |
+| GET `/api/metrics` | Saved evaluation and split details |
+| GET `/api/audit` | Cleaning, class balance, per-model error counts and aggregate test-set disagreement |
+| GET `/api/example` | Random held-out record and saved label when private row evidence is mounted; `kind` selects any, disagreement, any error or shared error |
+| POST `/api/audit/sensitivity` | One-field label-flip audit for a complete feature record |
+| GET `/health/live` | Process liveness |
+| GET `/health/ready` | Models loaded and ready |
+
+Use the complete request in `reports/example_request.json`:
+
+```powershell
+Invoke-RestMethod -Uri http://127.0.0.1:5000/api/predict -Method Post -ContentType 'application/json' -InFile reports/example_request.json
+```
+
+The API requires exactly `model` and `features`. It rejects missing/unknown fields, invalid codes, non-integer/out-of-range ages, malformed JSON, and oversized requests. QML returns a decision margin, **not a probability**. Survey submissions are not saved by the application.
+
+## Docker
+
+The Dockerfile uses Gunicorn rather than Flask's development server. The image deliberately excludes the survey CSV, trained model files and detailed reports. First ensure Docker Desktop is running with Linux containers. From this folder, run `python train.py` if model artifacts are not present, then mount those local files when starting the container:
+
+```powershell
+docker build -t lung-cancer-lab:1.0 .
+$modelDir = (Resolve-Path .\models).Path
+$reportDir = (Resolve-Path .\reports).Path
+docker run --rm -p 5001:5000 --mount "type=bind,source=$modelDir,target=/app/models,readonly" --mount "type=bind,source=$reportDir,target=/app/reports,readonly" lung-cancer-lab:1.0
+```
+
+Open http://127.0.0.1:5001. The container loads the mounted model files. The build requires internet access for dependencies. The published SHA-tagged image was pulled and verified with mounted models on 12 October 2026.
+
+## Docker Hub publication
+
+The GitHub Actions `publish` job targets [aryanvinju/se_miniproj](https://hub.docker.com/repository/docker/aryanvinju/se_miniproj/general) and pushes a **source-only** image after tests pass on a push to `main`. It can also be rerun manually on `main` through **Actions → TriadLens CI → Run workflow**. It uses GitHub repository Actions secrets `DOCKERHUB_USERNAME` (value `aryanvinju`) and `DOCKERHUB_TOKEN` (a Docker Hub access token). The workflow tags the image with the Git commit SHA and `latest`. Never place the token in a tracked file or a workflow input.
+
+The [main-branch publish run](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38201577529) succeeded on 12 October 2026. It pushed `aryanvinju/se_miniproj:0cf74d38d7729b70ff8a66c9588400286f6d0aea` and `:latest`, both with digest `sha256:ecbd5049e833911c3db2b09d0395d207a32797b2ef87b8235e233af3373d0e87`. The published image still needs local model and report artifacts mounted at runtime; it does not contain row-level survey data or encoded training states.
+
+The [simplified UI release run](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38203322240) also passed and pushed `aryanvinju/se_miniproj:b465cb7535d3a544f649d29cea827ed1fae26933` and the updated `:latest` tag with digest `sha256:5d299e742b84031632955994dfa2894e3282e3394b8c13f33d73945321199b95`.
+
+## Kubernetes deployment
+
+The namespace `lung-lab` isolates this demonstration. The manifest defines two replicas, a ClusterIP Service, startup/readiness/liveness probes, resource limits, a non-root container and read-only Secret mounts for model/report artifacts. Use this only in a local lab cluster; the reports include dataset row identifiers. The manifest pins the successfully published Docker Hub SHA tag. Docker Desktop's `docker-desktop` context was used for the verified deployment.
+
+```powershell
+minikube start --driver=docker
+kubectl create namespace lung-lab --dry-run=client -o yaml | kubectl apply -f -
+kubectl create secret generic triadlens-models --from-file=models/scaler.joblib --from-file=models/ml.joblib --from-file=models/qml.joblib --from-file=models/dl.pt -n lung-lab --dry-run=client -o yaml | kubectl apply -f -
+kubectl create secret generic triadlens-reports --from-file=reports/metrics.json --from-file=reports/example_request.json --from-file=reports/test_predictions.csv -n lung-lab --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f k8s/lung-lab.yaml
+kubectl rollout status deployment/lung-lab -n lung-lab --timeout=180s
+kubectl get pods,svc -n lung-lab
+kubectl port-forward service/lung-lab 8080:80 -n lung-lab
+```
+
+Keep the port-forward terminal open and visit http://127.0.0.1:8080. In a second terminal:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8080/health/ready
+Invoke-RestMethod -Uri http://127.0.0.1:8080/api/predict -Method Post -ContentType 'application/json' -InFile reports/example_request.json
+kubectl scale deployment/lung-lab --replicas=3 -n lung-lab
+kubectl rollout status deployment/lung-lab -n lung-lab
+kubectl get pods -n lung-lab
+kubectl scale deployment/lung-lab --replicas=2 -n lung-lab
+```
+
+For a self-healing demonstration, delete **one pod belonging to this lab** using its exact name from `kubectl get pods -n lung-lab`; show that the Deployment creates a replacement. Restart port-forward if its selected pod was deleted. Do not delete unrelated pods. To remove this lab's resources when finished, use `kubectl delete -f k8s/lung-lab.yaml`.
+
+For Docker Desktop Kubernetes, enable its cluster and select the `docker-desktop` context. Create the namespace and two Secrets using the commands above, then apply `k8s/lung-lab.yaml` and check rollout; skip `minikube start`. The manifest already points to the published SHA tag. Avoid using a public cluster with the supplied detailed reports.
+
+Troubleshooting: `ImagePullBackOff` usually means the image is absent from the cluster; `CrashLoopBackOff` requires reading `kubectl logs deployment/lung-lab -n lung-lab`; an unset context means a cluster has not been selected. Do not claim deployment success until rollout and HTTP requests succeed.
+
+## Verification status
+
+- **60 automated tests passed locally on 14 October 2026**, including four data-free public CI checks, model disagreement rules, held-out audit and slice counts, random case filters, one-field sensitivity, API predictions on all 55 test records, malformed-input handling, missing-model readiness, split integrity, known quantum gate behavior, and kernel properties.
+- A live HTTP request to the local app and a three-model prediction succeeded.
+- JavaScript passed Node's syntax check. Browser example, model selection and required-input checks passed; keyboard focus and 375 px layout passed. The 200 percent zoom check remains open.
+- GitHub Actions passed the public checks, built the source-only Docker image and published its SHA and latest tags to Docker Hub. The pulled image excludes the private survey CSV and model files. A mounted-model Docker run returned ready and all three model results. Docker Desktop Kubernetes ran two ready Pods and passed Service prediction, scaling and Pod replacement checks. See [DevOps verification](docs/DevOps_Verification.md).
+- Optional WebMCP registration is feature-detected. No compatible browser validation context was available; it is not part of the verified lab acceptance criteria.
+
+## Files to submit
+
+- `docs/Product_Backlog_and_Two_Sprints.md`: linked GitHub product backlog, two sprint backlogs, story points, demo scripts and the dated status/deviations log.
+- `docs/Sprint_Execution_and_Demo.md`: dated execution evidence, sprint deviations, live demonstration steps and outstanding acceptance items.
+- `docs/DevOps_Verification.md`: dated GitHub Actions, Docker Hub, Docker and Kubernetes evidence, with a separate status note for the current revision.
+- `docs/SRS.md`: requirements specification, use case diagram, security requirements and acceptance criteria.
+- `docs/System_Test_Plan.md`: test cases, traceability, actual evidence and pending deployment checks.
+- `docs/Architecture_Design.md`: three-tier, component and sequence diagrams; FR-to-test matrix; API and security design.
+- `docs/Team_Handoff_and_Test_Plan.md`: four-package integration, proposed ownership and verification plan.
+- `docs/Originality_and_Demo.md`: source attribution, genuine contribution workflow and demo steps.
+- `reports/metrics.json`, `test_predictions.csv`, `splits.json`, `dl_training_history.csv`: model evidence.
+- `reports/test_results.xml`, `http_smoke_test.json`: executed test evidence.
+- Python code, frontend, saved models, original dataset, Dockerfile, Kubernetes YAML and this README.
+
+The documents are editable Markdown and can be opened in a text editor or copied into your institution's report format. The local CSV's provenance and license were not supplied. A public [Survey Lung Cancer copy](https://huggingface.co/datasets/nateraw/lung-cancer) has the same 309-row schema and first records; byte identity with the local copy has not been independently verified. Only the local lungcancer.csv is included.
+
+## Git and GitHub Actions
+
+The `.github/workflows/ci.yml` workflow runs the public, data-free Pytest checks, Pylint error checks, JavaScript syntax and a Playwright browser fixture on pushes and pull requests, builds the Docker image, checks its application import and verifies that private artifacts are absent. Its `publish` job logs in to Docker Hub using repository secrets and pushes an image after a successful main-branch push or manual main-branch run. The full 60-case local suite and real-model browser cases require the private row-level dataset and derived evidence. Git tracks source changes locally; GitHub hosts the branch, pull request and Actions runs. Review a teammate's diff and record the review on GitHub before merge. The updated workflow has not yet run remotely.
+
+| Tool | Project use | Current evidence |
+|---|---|---|
+| Git | Versioned source and local commits | `git log` in this workspace |
+| GitHub | Source branch and review PR | [TriadLens PR #1](https://github.com/aryanvinju/SE_MINPROJ/pull/1) |
+| GitHub Actions | Python/JavaScript checks, image build and main-branch publish | [Simplified UI release run](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38203322240) |
+| Pytest | API, model and audit regression checks | 60 local tests passed on 3 November 2026 |
+| Pylint | Python error-class static analysis | Local check passed on 3 November 2026 |
+| Playwright | Real-model browser flow and public data-free UI fixture | 2 real-model and 1 fixture case passed locally on 3 November 2026 |
+| Docker | Reproducible source-only Gunicorn image | Published image pulled; exclusions inspected; mounted-model run passed |
+| Docker Hub | Image registry for `aryanvinju/se_miniproj` | Simplified UI SHA and latest tags pushed; digest `sha256:5d299e742b84031632955994dfa2894e3282e3394b8c13f33d73945321199b95` |
+| Kubernetes | Two replicas, Service, health probes and artifact Secret mounts | Docker Desktop rollout, Service prediction, scale and Pod replacement passed |
+
+## Primary references
+
+- [Scikit-learn evaluation guidance](https://scikit-learn.org/stable/modules/cross_validation.html)
+- [Scikit-learn SVC and precomputed kernels](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)
+- [PyTorch binary cross-entropy with logits](https://docs.pytorch.org/docs/stable/generated/torch.nn.BCEWithLogitsLoss.html)
+- [Qiskit quantum kernel tutorial](https://qiskit-community.github.io/qiskit-machine-learning/tutorials/03_quantum_kernel.html) — conceptual reference; this project implements its own simulator.
+- [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+
+
+## Educational risk levels
+
+Each model returns Low, Moderate or High **demo risk**, derived from its existing score. These bands do not change the model or its YES/NO prediction. ML/DL use Low below 0.30, Moderate from 0.30 to below 0.70 and High at or above 0.70. QML uses its uncalibrated SVM margin: Low below -0.50, Moderate from -0.50 to below 0.50 and High at or above 0.50. These are arbitrary demonstration thresholds, not medical cutoffs or calibrated cancer probabilities. Low does not rule out disease; categories from different models are not directly comparable. API results include risk.level, risk.basis, risk.thresholds and risk.clinical_risk=false. ST22 and ST23 cover boundary assignments and API consistency.
+

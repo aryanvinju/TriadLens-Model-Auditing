@@ -1,0 +1,178 @@
+# TriadLens: ML, DL and QML Disagreement Audit
+# Software Requirements Specification (ISO/IEC/IEEE 29148-style)
+
+Version 2.2 · 3 November 2026 · Prepared for the software engineering mini-project
+
+Project team: Aryan Vinju, Aditya Shetty, Avantika Jitesh, Apeksha Ashok. Student identifiers are in the private submission PDFs.
+Class, section and instructor: complete on the private submission copy
+
+## 1 Introduction
+
+### 1.1 Purpose and audience
+
+This Software Requirements Specification defines the functions, interfaces, data constraints and quality requirements for TriadLens. It is the agreement used by the project team to implement the portal and by the instructor to verify it. Requirement identifiers are stable across the architecture design and system test plan.
+
+### 1.2 Product scope and problem
+
+**Problem statement.** Small, imbalanced health-survey datasets can produce deceptively similar accuracy scores from very different models. A single predicted label hides disagreement, class imbalance, and extrapolation beyond the training data. TriadLens is a full-stack educational audit portal that trains classical ML, deep learning and simulated quantum ML on one reproducible survey split, then shows model disagreement, a descriptive majority dataset label, the majority-class baseline and an age-range warning for each comparison. It is intended to help students inspect model behavior, not to diagnose disease.
+
+The application classifies records from the supplied lungcancer.csv dataset using machine learning, deep learning and simulated quantum machine learning. A student enters the 15 survey features, selects a model or all three, and reviews predicted YES/NO dataset labels, an agreement audit and held-out evaluation metrics. The project includes training code, saved artifacts, a Python backend, a browser interface, Git/GitHub collaboration, GitHub Actions CI, Docker, Docker Hub publication and Kubernetes deployment configuration.
+
+This document describes the implemented local application and the planned local container deployment. Model/API checks pass for the current source. A mounted-model Docker run and a two-replica Docker Desktop Kubernetes deployment passed for an earlier October image; the current revision still needs a new deployment check. The system is a classroom demonstration, not a clinical decision support system.
+
+### 1.3 Definitions and conventions
+
+ML means logistic-regression machine learning; DL means the PyTorch neural network; QML means a simulated four-qubit quantum-fidelity kernel with a classical SVM. A held-out record belongs to the fixed test partition and is not used for fitting. FR identifies a functional requirement, NFR a quality requirement, SR a security requirement and ST/PW a verification case. **Shall** marks a requirement; descriptive text explains design or measured results.
+
+### 1.4 Document organization and standards
+
+Section 2 describes users and the operating environment; Section 3 specifies data; Sections 4-5 contain verifiable functional and quality requirements; Sections 6-8 describe external interfaces, model behavior and deployment constraints; Section 9 records acceptance and limits. This SRS follows the requirements-document structure and requirement-quality guidance of [ISO/IEC/IEEE 29148:2018](https://www.iso.org/obp/ui?_escaped_fragment_=iso%3Astd%3Aiso-iec-ieee%3A29148%3Aed-2%3Av1%3Aen). [IEEE 829-2008](https://standards.ieee.org/ieee/829/3787/) addresses **test documentation**, not SRS structure; the companion [System Test Plan](System_Test_Plan.md) uses its test-plan headings. IEEE 829 has been superseded by the ISO/IEC/IEEE 29119 series.
+
+## 2 Overall description: stakeholders and operating environment
+
+The student operates and explains the application. The instructor reviews the implementation, methodology, documentation and demonstration. A lab operator starts the application or deploys it to a local Kubernetes cluster. User accounts, administrative screens, clinical users, medical records and persistent prediction histories are outside scope.
+
+The verified development environment is Windows with Python 3.13, NumPy 2.3.3, pandas 2.3.2, scikit-learn 1.9.0, PyTorch 2.13.0 CPU, Flask 3.1.3 and SciPy 1.18.1. The Dockerfile targets Linux with Python 3.13 and Gunicorn. A browser, a working Docker engine and a Kubernetes cluster are required for the full deployment demonstration. Internet access is required for initial dependency and image installation; prediction itself does not call an external API.
+
+## 3 Data requirements
+
+Only the teacher-provided lungcancer.csv is used. It contains 309 rows, 15 inputs and one target column. The original CSV remains unchanged. Training strips leading/trailing column-name whitespace and rejects missing values or invalid categories. It removes 33 exact duplicates and excludes both members of one contradictory-label pair, leaving 274 usable records. Exclusion is deterministic and recorded in reports/metrics.json.
+
+| Field | Accepted values | Interpretation |
+|---|---|---|
+| GENDER | F or M | Preserve dataset category; encode F=0 and M=1 |
+| AGE | Integer 0 to 120 | API input range; warn outside the learned training age range |
+| SMOKING, YELLOW_FINGERS, ANXIETY, PEER_PRESSURE | Numeric 1 or 2 | Preserve source codes; encode 1→0 and 2→1 internally |
+| CHRONIC DISEASE, FATIGUE, ALLERGY, WHEEZING | Numeric 1 or 2 | Same coding rule |
+| ALCOHOL CONSUMING, COUGHING, SHORTNESS OF BREATH | Numeric 1 or 2 | Same coding rule |
+| SWALLOWING DIFFICULTY, CHEST PAIN | Numeric 1 or 2 | Same coding rule |
+| LUNG_CANCER | NO or YES | Training target only; NO=0 and YES=1 |
+
+The local CSV does not establish its original source, license or binary-feature codebook. A public [Survey Lung Cancer dataset copy](https://huggingface.co/datasets/nateraw/lung-cancer) has 309 rows and matching columns, but byte identity with the local file has not been verified. The interface displays Code 1 and Code 2 rather than inventing meanings. The target is never accepted as a prediction input. Dataset row numbers in split reports refer to the cleaned, reset-index dataset.
+
+### 3.1 UML use case diagram
+
+![TriadLens UML use case diagram](diagrams/use_case.svg)
+
+Figure 1. The Student uses UC-01 load example, UC-02 enter features, UC-03 compare models, and UC-04 inspect metrics. The Lab Operator uses UC-05 train models and UC-06 deploy service. Validation occurs within UC-03; the disagreement audit appears when all three models are selected.
+
+## 4 Functional requirements
+
+| ID | Requirement | Acceptance evidence |
+|---|---|---|
+| FR01 | The application shall serve a form containing all 15 input fields. | ST01 and manual ST16 |
+| FR02 | When saved held-out predictions are available, the application shall load random test records by case type without repeating one already seen in the browser session; otherwise it may load the saved training example. | ST28 and browser check |
+| FR03 | The API shall accept exactly model and features, rejecting missing or extra keys. | ST06 |
+| FR04 | The API shall validate field types, finite integer ages and categorical codes. | ST05 and ST09 |
+| FR05 | The application shall run ML, DL, QML or all three on the supplied record. | ST03 and ST04 |
+| FR06 | The application shall display predicted label, score type and inference time for each selected model. | ST03, ST04 and manual ST16 |
+| FR07 | The application shall distinguish the QML decision margin from a probability. | ST03 response inspection and ST16 |
+| FR08 | The application shall expose saved accuracy, balanced accuracy, precision, recall, F1, ROC AUC and split details. | ST13 |
+| FR09 | Training shall use disjoint, reproducible train, validation and test partitions. | ST10 |
+| FR10 | Learned preprocessing shall be fitted only on training data and reused at prediction time. | ST04 and ST10 |
+| FR11 | The application shall return appropriate JSON errors for invalid transport and unavailable models. | ST07 and ST08 |
+| FR12 | The service shall expose separate liveness and readiness endpoints. | ST02 and ST08 |
+| FR13 | The container deployment shall run two replicas reachable through a Kubernetes Service. | Passed ST18 and ST19 |
+| FR14 | Training shall persist the models, split IDs, version information and held-out predictions. | ST04, ST10 and ST13 |
+| FR15 | For ALL, the API shall report labels, agreement count, unanimity, a descriptive majority dataset label and review reasons for disagreement or age extrapolation; for one model, comparison shall be null. The portal shall also summarize held-out per-model errors and aggregate disagreement without exposing individual test rows. | ST24, ST25 and ST27 |
+| FR16 | A successful main-branch GitHub Actions run shall publish the source-only image to the supplied Docker Hub repository using repository secrets. | Workflow inspection and live ST26 |
+| FR17 | The test-set audit shall show aggregate accuracy for gender-code and age slices with their sample and class counts. It shall not present those small groups as a fairness verdict. | ST28 |
+| FR18 | For an audited record, the API shall probe one input at a time and report which model labels flip. It shall label this as sensitivity rather than causal explanation. | ST29 |
+| FR19 | The browser shall compare a sampled held-out record with its saved dataset label and keep completed sampled comparisons visible until page refresh. | Browser audit check |
+| FR20 | After a browser audit, the interface shall display the submitted input count and selection, the processing steps performed, and the resulting model labels in an input-processing-output test flow. | PW01 real-model browser check and PW02 mocked public UI check |
+
+## 5 Nonfunctional requirements
+
+| ID | Requirement and measurable criterion | Verification |
+|---|---|---|
+| NFR01 | Local API outputs shall match offline held-out predictions for all three models. | ST04 checks all 55 test records |
+| NFR02 | Invalid requests shall not expose stack traces; requests above 16 KiB shall be rejected. | ST05–ST08 |
+| NFR03 | Survey submissions shall not be written to application storage. Response caching shall be disabled. | Source inspection and ST14 |
+| NFR04 | The interface shall remain usable at 375 px width, with keyboard input and visible focus. | ST17 keyboard and 375 px checks passed; 200 percent zoom remains open |
+| NFR05 | Repeated identical inputs shall produce the same label and score within the running process. | ST15 |
+| NFR06 | A missing model artifact shall make readiness fail while liveness remains available. | ST08 |
+| NFR07 | Container configuration shall run as a non-root user with bounded resources. | Manifest inspection and live ST18–ST19 passed |
+| NFR08 | All local automated acceptance checks shall pass before submission. | 60 tests pass locally; earlier JUnit evidence in the private submission bundle |
+| NFR09 | GitHub Actions shall run Pytest public checks, Pylint error checks, JavaScript syntax and a data-free Playwright browser flow on pushes and pull requests, then build the Docker image if those checks pass. | Workflow inspection and a new remote run for the current revision are required |
+| NFR10 | Public Docker images shall exclude the survey CSV, model artifacts and detailed reports; Kubernetes shall mount required artifacts separately. | Docker context inspection, CI image check and live ST18–ST19 passed |
+
+There is no medically meaningful accuracy acceptance threshold. The project reports measured results transparently and includes the majority-class baseline. No sustained load, multi-user capacity or production availability guarantee has been established.
+
+### 5.1 Security objectives and requirements
+
+**SO-01 Integrity:** malformed survey values must not reach saved models or change artifacts. **SO-02 Privacy:** submissions must not be retained or cached. **SO-03 Isolation:** the container must use a non-root identity and bounded resources.
+
+**SR-01:** `/api/predict` shall accept only the exact JSON schema and validated feature codes (ST05–ST07). **SR-02:** bodies above 16 KiB shall be rejected (ST07). **SR-03:** responses shall carry `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` and a same-origin Content Security Policy (ST14). **SR-04:** the container shall run non-root without added Linux capabilities (manifest inspection and live ST18–ST19).
+
+## 6 Architecture and interfaces
+
+```text
+Offline training
+lungcancer.csv → validation and cleaning → stratified split
+  → training-only StandardScaler
+  ├─ logistic regression → ml.joblib
+  ├─ neural network with validation early stopping → dl.pt
+  └─ training-only PCA and angle scaling → simulated quantum kernel → qml.joblib
+  → evaluation reports and split evidence
+
+Online prediction
+Browser form → POST /api/predict → Flask validation → saved preprocessing
+  → selected saved model(s) → JSON results → browser result cards
+
+Deployment
+Browser → local port-forward → Kubernetes Service → one of two application Pods
+```
+
+The frontend is HTML, CSS and JavaScript served by Flask. The backend validates JSON and loads trusted local model files once at startup. No database is necessary because the requirements do not include accounts or stored predictions. Training is a separate command and does not run inside prediction requests.
+
+The browser's test flow renders three steps for each audit: **input** (15 survey fields, selected model and held-out record when present), **processing** (validation, saved preprocessing and selected model inference), and **output** (model labels and the saved dataset label when available). It is a display of the actual request path; it does not save a new server-side audit record.
+
+| Endpoint | Contract |
+|---|---|
+| GET / | Return the prediction interface |
+| POST /api/predict | JSON object with model in ML, DL, QML, ALL and the exact feature object |
+| GET /api/metrics | Return the saved evaluation report; 503 if absent |
+| GET /api/audit | Return dataset cleaning counts, test class balance, per-model error counts, and aggregate model disagreement; 503 if metrics are absent |
+| GET /api/example | Return a random saved held-out record and its dataset label, optionally filtered by case type and excluded IDs; fall back to the training example when row-level evidence is unavailable |
+| POST /api/audit/sensitivity | Validate one complete feature object, change one field at a time and return label-flip counts and changed cases |
+| GET /health/live | Return 200 when the service process responds |
+| GET /health/ready | Return 200 when models load; otherwise 503 |
+
+Prediction responses contain results, warnings and an educational-use note. Each result contains model, label, score, score_type and inference_ms. Error status codes include 400 for invalid data or malformed JSON, 405 for unsupported methods, 413 for oversized payloads, 415 for unsupported content type and 503 for unavailable models.
+
+For ALL, `comparison` contains each label, agreement_count, unanimous, majority_dataset_label, review_flag and review_reasons. For an individual model, comparison is null. A majority dataset label is descriptive, not a clinical vote.
+
+The held-out audit uses the fixed test split. Its four error counts per model come from the saved confusion matrices. Agreement and slice counts are saved in the aggregate evaluation report during training, so the container does not need row-level test predictions for these views. The audit endpoint never returns individual test records. The optional example endpoint serves one test record at a time only when the private prediction file is mounted; it is intended for the local evaluator demo, and the UI keeps comparisons only until refresh.
+
+## 7 Model design and evaluation
+
+The cleaned dataset is split with random seed 42 into 175 training, 44 validation and 55 test records. The same rows are used across the three implementations. Training class frequencies determine balanced weights. Test data is held out from preprocessing, training and checkpoint selection.
+
+ML uses logistic regression with balanced class weights and a maximum of 2000 solver iterations. DL uses 15 inputs, hidden layers of 32 and 16 ReLU units and one output logit. Adam minimizes weighted binary cross-entropy with logits. Early stopping selects the best validation-loss checkpoint, with a maximum of 500 epochs and patience of 40. A sigmoid is applied only when producing the DL score.
+
+QML uses four training-fitted PCA components, scaled into angles from minus pi to pi. The simulator starts at state 0000 and applies two rounds of RY and RZ rotations followed by CNOT gates 0→1, 1→2 and 2→3. The squared magnitude of the inner product between two feature states is their quantum fidelity kernel. A classical SVM with C=1 and balanced class weights learns on the precomputed kernel. The kernel is evaluated exactly on a CPU without sampling noise or hardware access.
+
+The test set contains seven NO and 48 YES labels. ML and DL achieved 92.73% accuracy, and QML achieved 89.09%; the majority-class baseline achieved 87.27%. Full metrics and confusion matrices are supplied separately. Four PCA components retain approximately 51.3% of training variance, so QML and the other models do not receive identical representations. No quantum advantage is claimed.
+
+## 8 Deployment requirements
+
+The image shall load pretrained artifacts under Gunicorn on port 5000. The namespace is lung-lab; the Deployment and Service share app=lung-lab labels. Each Pod requests 100 millicores and 256 MiB and has limits of one CPU and 1 GiB. A writable temporary volume supports a read-only root filesystem. The Service exposes port 80 to the container's named http port. The README provides Minikube image-loading, rollout and port-forward commands.
+
+Deployment acceptance requires a successful image build, successful rollout, two ready Pods, a reachable readiness endpoint and a successful three-model request through the Service. These checks passed on Docker Desktop Kubernetes on 12 October 2026; the [DevOps verification log](DevOps_Verification.md) records the observations. This is a local lab cluster, not a public production deployment.
+
+## 9 Limitations and acceptance status
+
+The current implementation is suitable for a lab demonstration with synthetic or supplied example records. It lacks clinical validation, verified dataset provenance, a supplied codebook, authentication, persistence, hardware quantum execution, and production deployment testing. Those omissions are explicit scope boundaries rather than implemented capabilities.
+
+Local automated acceptance for the current source passed on 3 November 2026: 60 Pytest cases, Pylint error checks, JavaScript syntax, two real-model Playwright cases and one explicit data-free UI fixture. The earlier manual browser ST16 and Docker/Kubernetes ST18–ST21 results apply to the October image; the current revision still needs remote CI and deployment verification. The 200 percent zoom portion of ST17 and instructor review remain open in the System Test Plan. The instructor may impose a report template or require Qiskit/PennyLane; these requirements were not supplied and would need an explicit revision to this specification.
+
+## 10 References
+
+The project README links the official scikit-learn evaluation and SVC documentation, PyTorch BCEWithLogitsLoss documentation, Qiskit's conceptual quantum kernel tutorial, and Kubernetes Deployment and Service documentation. Implementation and measured results are traceable to train.py, quantum.py and reports/metrics.json.
+
+Document structure references: [ISO/IEC/IEEE 29148:2018](https://www.iso.org/obp/ui?_escaped_fragment_=iso%3Astd%3Aiso-iec-ieee%3A29148%3Aed-2%3Av1%3Aen) for requirements and [IEEE 829-2008](https://standards.ieee.org/ieee/829/3787/) for test documentation. The project claims alignment of its headings and traceability, not formal standards certification.
+
+
+## Educational risk levels
+
+Each model returns Low, Moderate or High **demo risk**, derived from its existing score. These bands do not change the model or its YES/NO prediction. ML/DL use Low below 0.30, Moderate from 0.30 to below 0.70 and High at or above 0.70. QML uses its uncalibrated SVM margin: Low below -0.50, Moderate from -0.50 to below 0.50 and High at or above 0.50. These are arbitrary demonstration thresholds, not medical cutoffs or calibrated cancer probabilities. Low does not rule out disease; categories from different models are not directly comparable. API results include risk.level, risk.basis, risk.thresholds and risk.clinical_risk=false. ST22 and ST23 cover boundary assignments and API consistency.
