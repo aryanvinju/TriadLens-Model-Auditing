@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="480" height="270" preserveAspectRatio="xMinYMin meet" viewBox="0 0 480 270" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="480" height="270"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-270)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="89" y="14" width="302" height="244" rx="10" ry="10" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.5; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="215.547" y="238" style="font-family: Helvetica; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,476) scale(1,-1)">TriadLens</text>
+			<circle cx="39" cy="153" r="7" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<path d="M 39,146 L 39,119 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 26,134 L 52,134 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 39,119 L 27,100 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 39,119 L 51,100 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<text x="24.35025" y="85" style="font-family: Helvetica; font-size: 8.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,170) scale(1,-1)">Student</text>
+			<circle cx="441" cy="153" r="7" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<path d="M 441,146 L 441,119 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 428,134 L 454,134 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 441,119 L 429,100 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<path d="M 441,119 L 453,100 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.4;"/>
+			<text x="415.959" y="85" style="font-family: Helvetica; font-size: 8.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,170) scale(1,-1)">Lab Operator</text>
+			<path d="M 59,134 L 128,199 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<path d="M 59,134 L 128,151 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<path d="M 59,134 L 128,103 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<path d="M 59,134 L 128,55 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<path d="M 421,134 L 374,175 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<path d="M 421,134 L 374,79 Z" style="stroke: rgb(40%,43%,52%); stroke-linecap: butt; stroke-width: 1;"/>
+			<ellipse cx="190.0" cy="199.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="164.876" y="201" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,402) scale(1,-1)">Load example</text>
+			<text x="180.32185" y="190" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,380) scale(1,-1)">UC-01</text>
+			<ellipse cx="190.0" cy="151.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="164.876" y="153" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,306) scale(1,-1)">Enter features</text>
+			<text x="180.32185" y="142" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,284) scale(1,-1)">UC-02</text>
+			<ellipse cx="190.0" cy="103.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="159.548" y="105" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,210) scale(1,-1)">Compare models</text>
+			<text x="180.32185" y="94" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,188) scale(1,-1)">UC-03</text>
+			<ellipse cx="190.0" cy="55.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="163.10399999999998" y="57" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,114) scale(1,-1)">Inspect metrics</text>
+			<text x="180.32185" y="46" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,92) scale(1,-1)">UC-04</text>
+			<ellipse cx="312.0" cy="175.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="288.884" y="177" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,354) scale(1,-1)">Train models</text>
+			<text x="302.32185" y="166" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,332) scale(1,-1)">UC-05</text>
+			<ellipse cx="312.0" cy="79.0" rx="62.0" ry="18.0" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1.2; fill: rgb(96%,96%,97%); fill-rule: evenodd;"/>
+			<text x="285.772" y="81" style="font-family: Helvetica; font-size: 8px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,162) scale(1,-1)">Deploy service</text>
+			<text x="302.32185" y="70" style="font-family: Helvetica; font-size: 6.7px;fill: rgb(40%,43%,52%); stroke:none;" transform="translate(0,140) scale(1,-1)">UC-06</text>
+		</g>
+	</g>
+</svg>
