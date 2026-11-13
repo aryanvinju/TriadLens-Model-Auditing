@@ -1,7 +1,10 @@
 # TriadLens: ML, DL and QML Disagreement Audit
 # System Test Plan and Execution Record (IEEE 829-style)
 
-Version 2.2 | 3 November 2026
+Current verification (13 November 2026): the four contributor PRs are merged; 60 Python tests, two real-model Playwright cases, one public fixture, CI publication and the current-image Docker/Kubernetes checks pass. See [DevOps verification](DevOps_Verification.md) and [sprint execution](Sprint_Execution_and_Demo.md). Earlier dated status statements below are historical. Human review and student narration remain pending.
+
+
+Version 2.3 | 3 November 2026
 
 Project team: Aryan Vinju, Aditya Shetty, Avantika Jitesh, Apeksha Ashok. Student identifiers are in the private submission PDFs.
 Tester: project team
@@ -66,9 +69,9 @@ Case identifiers map directly to tests/test_system.py. Parameterized variations 
 | ST28 | Slice counts cover all 55 test records; random examples reference actual held-out rows, avoid an excluded row, and support disagreement and shared-error filters. | FR02, FR17 | PASS |
 | ST29 | A complete record produces 16 one-field probes; reported flip counts equal changed-case entries and invalid features are rejected. | FR18 | PASS |
 
-The 14 October local automated result was **60 passed, zero failures, zero errors**. The suite was repeated on **2 November 2026** with `python -m pytest -q --basetemp=tmp/pytest-submission-20261102`: **60 passed in 8.05 seconds**. Four checks are data-free public CI checks. JUnit evidence for the earlier 57-test run is in the private submission bundle at reports/test_results.xml. JavaScript syntax also passed on 2 November. Timings vary by machine.
+On 13 November 2026, the regenerated model artifacts and merged source passed 60 tests in 6.30 seconds. Run: python -m pytest -q --basetemp=tmp/verify-final-20261113 --junitxml=output/verification/pytest.xml. The workspace tmp directory must exist. Four cases are public CI checks.
 
-On **3 November 2026**, Pytest again passed **60/60**; Pylint 4.1.3 with `--errors-only` passed on `app.py`, `audit.py`, `core.py`, `quantum.py` and `train.py`; JavaScript syntax passed. Playwright 1.62.1 with local Microsoft Edge passed **2/2 real-model browser cases** and **1/1 data-free fixture case**. The real browser test displays a held-out record through input, processing, output, disagreement, saved-label comparison, four aggregate slices and 16 one-field probes. The fixture test checks front-end rendering without private model files. These are local results; a GitHub Actions run for the current revision remains unverified.
+On 13 November 2026, Pylint errors-only and Node syntax passed. Installed Edge passed 2/2 real-model cases and 1/1 mocked public fixture. Current main CI passed the public suite and published the verified Docker image. Full artifacts remain in the private submission under output/verification.
 
 ### 5.1 Security validation
 
@@ -88,9 +91,9 @@ ML and DL: Low below 0.30; Moderate from 0.30 to below 0.70; High at or above 0.
 | ST19 | Create local cluster Secrets, pull the image, apply YAML, wait for rollout and port-forward Service to 8080. | Two ready Pods and successful three-model HTTP response through Service. | PASS: Docker Desktop context, two ready Pods, ready endpoint and ML/DL/QML response through Service |
 | ST20 | Scale to three replicas, verify readiness, then restore two. | Desired replica counts are achieved. | PASS: 3/3 ready, then 2/2 ready |
 | ST21 | Delete one exact Pod in namespace lung-lab and observe replacement. | Replacement becomes ready; API works after reconnecting port-forward if needed. | PASS: deleted `lung-lab-855cc58c-hhtw2`; replacement `lung-lab-855cc58c-btg9m` became ready; API worked after reconnecting port-forward |
-| ST26 | After repository secrets are configured, merge the reviewed PR or manually run the workflow on main. | GitHub Actions publishes SHA and latest tags to aryanvinju/se_miniproj; pulled image excludes survey rows and model artifacts. | PASS: [main run 38201577529](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38201577529) pushed both tags; pulled digest `sha256:ecbd5049e833911c3db2b09d0395d207a32797b2ef87b8235e233af3373d0e87`; image inspection confirmed exclusions |
-| PW01 | Use Playwright with actual local artifacts: load a disagreement record, inspect input-processing-output, saved label, slices and sensitivity; reject missing required input. | Browser renders a real-model audit and blocks empty submission. | PASS locally on 3 November: 2/2 Edge cases; screenshot in local `test-results/input-processing-output.png` |
-| PW02 | Use Playwright with a clearly mocked API fixture in public CI. | Browser passes 15 fields and renders three model labels and saved label without including private artifacts. | PASS locally on 3 November: 1/1 Edge case; remote CI pending |
+| ST26 | Publish the SHA image after main checks. | Published image excludes private artifacts. | PASS 13 November: [run 43279363986](https://github.com/aryanvinju/TriadLens-Model-Auditing/actions/runs/43279363986), pulled digest matches DevOps record |
+| PW01 | Use Playwright with actual local artifacts: load a disagreement record, inspect input-processing-output, saved label, slices and sensitivity; reject missing required input. | Browser renders a real-model audit and blocks empty submission. | PASS 13 November: 2/2 real-model Edge cases; local screenshot and video evidence |
+| PW02 | Use Playwright with a clearly mocked API fixture in public CI. | Browser passes 15 fields and renders three model labels and saved label without including private artifacts. | PASS 13 November: 1/1 Edge case and current remote main CI |
 
 Kubernetes YAML parsing and label-selector consistency were checked, followed by live Docker Desktop cluster deployment. Optional WebMCP integration has not been checked in a compatible browser and is outside lab acceptance.
 

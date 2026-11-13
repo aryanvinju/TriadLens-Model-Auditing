@@ -1,7 +1,10 @@
 # TriadLens: ML, DL and QML Disagreement Audit
 # Software Requirements Specification (ISO/IEC/IEEE 29148-style)
 
-Version 2.2 · 3 November 2026 · Prepared for the software engineering mini-project
+Current verification (13 November 2026): the four contributor PRs are merged; 60 Python tests, two real-model Playwright cases, one public fixture, CI publication and the current-image Docker/Kubernetes checks pass. See [DevOps verification](DevOps_Verification.md) and [sprint execution](Sprint_Execution_and_Demo.md). Earlier dated status statements below are historical. Human review and student narration remain pending.
+
+
+Version 2.3 · 3 November 2026 · Prepared for the software engineering mini-project
 
 Project team: Aryan Vinju, Aditya Shetty, Avantika Jitesh, Apeksha Ashok. Student identifiers are in the private submission PDFs.
 Class, section and instructor: complete on the private submission copy
@@ -18,7 +21,7 @@ This Software Requirements Specification defines the functions, interfaces, data
 
 The application classifies records from the supplied lungcancer.csv dataset using machine learning, deep learning and simulated quantum machine learning. A student enters the 15 survey features, selects a model or all three, and reviews predicted YES/NO dataset labels, an agreement audit and held-out evaluation metrics. The project includes training code, saved artifacts, a Python backend, a browser interface, Git/GitHub collaboration, GitHub Actions CI, Docker, Docker Hub publication and Kubernetes deployment configuration.
 
-This document describes the implemented local application and the planned local container deployment. Model/API checks pass for the current source. A mounted-model Docker run and a two-replica Docker Desktop Kubernetes deployment passed for an earlier October image; the current revision still needs a new deployment check. The system is a classroom demonstration, not a clinical decision support system.
+This document describes the implemented educational application and verified local container deployment. Full Python/API and real-model browser checks pass. The exact current SHA image passed Docker and two-replica Docker Desktop Kubernetes readiness, prediction and scaling checks on 13 November 2026.
 
 ### 1.3 Definitions and conventions
 
@@ -93,7 +96,7 @@ Figure 1. The Student uses UC-01 load example, UC-02 enter features, UC-03 compa
 | NFR06 | A missing model artifact shall make readiness fail while liveness remains available. | ST08 |
 | NFR07 | Container configuration shall run as a non-root user with bounded resources. | Manifest inspection and live ST18–ST19 passed |
 | NFR08 | All local automated acceptance checks shall pass before submission. | 60 tests pass locally; earlier JUnit evidence in the private submission bundle |
-| NFR09 | GitHub Actions shall run Pytest public checks, Pylint error checks, JavaScript syntax and a data-free Playwright browser flow on pushes and pull requests, then build the Docker image if those checks pass. | Workflow inspection and a new remote run for the current revision are required |
+| NFR09 | GitHub Actions shall run Pytest public checks, Pylint error checks, JavaScript syntax and a data-free Playwright browser flow on pushes and pull requests, then build the Docker image if those checks pass. | PASS: current main run 43279363986; see DevOps verification |
 | NFR10 | Public Docker images shall exclude the survey CSV, model artifacts and detailed reports; Kubernetes shall mount required artifacts separately. | Docker context inspection, CI image check and live ST18–ST19 passed |
 
 There is no medically meaningful accuracy acceptance threshold. The project reports measured results transparently and includes the majority-class baseline. No sustained load, multi-user capacity or production availability guarantee has been established.
@@ -164,7 +167,7 @@ Deployment acceptance requires a successful image build, successful rollout, two
 
 The current implementation is suitable for a lab demonstration with synthetic or supplied example records. It lacks clinical validation, verified dataset provenance, a supplied codebook, authentication, persistence, hardware quantum execution, and production deployment testing. Those omissions are explicit scope boundaries rather than implemented capabilities.
 
-Local automated acceptance for the current source passed on 3 November 2026: 60 Pytest cases, Pylint error checks, JavaScript syntax, two real-model Playwright cases and one explicit data-free UI fixture. The earlier manual browser ST16 and Docker/Kubernetes ST18–ST21 results apply to the October image; the current revision still needs remote CI and deployment verification. The 200 percent zoom portion of ST17 and instructor review remain open in the System Test Plan. The instructor may impose a report template or require Qiskit/PennyLane; these requirements were not supplied and would need an explicit revision to this specification.
+Current verification on 13 November 2026: 60 Pytest cases, Pylint error checks, JavaScript syntax, two real-model Playwright cases and one public fixture pass. Main CI 43279363986 published the verified image. Docker/Kubernetes readiness, inference and scaling pass. The 200 percent browser zoom portion of ST17 and instructor review remain open in the System Test Plan. The instructor may impose a report template or require Qiskit/PennyLane; these requirements were not supplied and would need an explicit revision to this specification.
 
 ## 10 References
 

@@ -1,5 +1,8 @@
 # TriadLens: genuine contribution and demo guide
 
+Current verification (13 November 2026): the four contributor PRs are merged; 60 Python tests, two real-model Playwright cases, one public fixture, CI publication and the current-image Docker/Kubernetes checks pass. See [DevOps verification](DevOps_Verification.md) and [sprint execution](Sprint_Execution_and_Demo.md). Earlier dated status statements below are historical. Human review and student narration remain pending.
+
+
 Project team: Aryan Vinju, Aditya Shetty, Avantika Jitesh and Apeksha Ashok. Student identifiers are included in the private submission PDFs. Assign actual contributions and PR authorship only after the team confirms its work.
 
 ## How to make the submission defensible

@@ -1,11 +1,14 @@
 # TriadLens: Software Architecture and Design Specification (IEEE-style)
 
-Version 1.2 | 3 November 2026
+Current verification (13 November 2026): the four contributor PRs are merged; 60 Python tests, two real-model Playwright cases, one public fixture, CI publication and the current-image Docker/Kubernetes checks pass. See [DevOps verification](DevOps_Verification.md) and [sprint execution](Sprint_Execution_and_Demo.md). Earlier dated status statements below are historical. Human review and student narration remain pending.
+
+
+Version 1.3 | 3 November 2026
 Project team: Aryan Vinju, Aditya Shetty, Avantika Jitesh, Apeksha Ashok. Student identifiers are kept in the private submission PDFs.
 
 ## 1. Introduction
 
-This document designs the educational ML/DL/QML disagreement-audit portal defined in SRS v2.2. The design separates offline model training from online inference, retains one reproducible data split, and gives users enough evidence to recognize disagreement and class imbalance. The system is not a clinical decision system.
+This document designs the educational ML/DL/QML disagreement-audit portal defined in SRS v2.3. The design separates offline model training from online inference, retains one reproducible data split, and gives users enough evidence to recognize disagreement and class imbalance. The system is not a clinical decision system.
 
 ## 2. Architecture
 
@@ -78,7 +81,7 @@ flowchart LR
   Secrets --> Pod2
 ```
 
-The Dockerfile uses a non-root user, Gunicorn, and port 5000. The Docker context excludes the survey CSV, model artifacts and detailed reports. GitHub Actions builds that source-only image on pushes and pull requests; [main run 38201577529](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38201577529) published its SHA and latest tags to Docker Hub. The Kubernetes Deployment requests CPU/memory, sets limits, drops Linux capabilities, uses a read-only root filesystem and mounts a small writable `/tmp` plus read-only model/report Secrets. Startup/readiness probes call `/health/ready`; liveness calls `/health/live`. A Docker Desktop cluster rollout, Service request, scaling and Pod replacement passed on 12 October 2026.
+The Dockerfile uses a non-root user, Gunicorn, and port 5000. The Docker context excludes the survey CSV, model artifacts and detailed reports. GitHub Actions builds that source-only image on pushes and pull requests; [main run 43279363986](https://github.com/aryanvinju/TriadLens-Model-Auditing/actions/runs/43279363986) published its SHA and latest tags to Docker Hub. The Kubernetes Deployment requests CPU/memory, sets limits, drops Linux capabilities, uses a read-only root filesystem and mounts a small writable `/tmp` plus read-only model/report Secrets. Startup/readiness probes call `/health/ready`; liveness calls `/health/live`. The current-image Docker Desktop rollout, Service request and 2/3/2 scaling passed on 13 November 2026. Earlier Pod replacement evidence is historical.
 
 ### 2.5 Functional requirement-to-test traceability matrix
 
