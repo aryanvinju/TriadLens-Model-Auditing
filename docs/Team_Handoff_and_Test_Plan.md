@@ -1,5 +1,8 @@
 # TriadLens team handoff and verification plan
 
+Current verification (13 November 2026): the four contributor PRs are merged; 60 Python tests, two real-model Playwright cases, one public fixture, CI publication and the current-image Docker/Kubernetes checks pass. See [DevOps verification](DevOps_Verification.md) and [sprint execution](Sprint_Execution_and_Demo.md). Earlier dated status statements below are historical. Human review and student narration remain pending.
+
+
 Version 1.0 | 3 November 2026
 
 ## Goal and sequence
@@ -10,7 +13,7 @@ Version 1.0 | 3 November 2026
 4. Open pull requests for review. GitHub Actions runs public Pytest, Pylint, JavaScript, a data-free Playwright browser fixture, a source-only Docker build and an image import check. After review and merge to `main`, a successful workflow publishes the image to Docker Hub using repository secrets.
 5. Pull the exact SHA-tagged Docker Hub image, mount trusted private model/report artifacts, and verify readiness and prediction. Deploy that tag to the local Kubernetes cluster, confirm two ready Pods and the Service response, then record demo/video evidence and the exact commit SHA.
 
-The new repository does not exist in this workspace yet, so a new URL, teammate GitHub handles, pull requests and new-repository CI results must be recorded when created. Do not backdate these actions or use another person's account to commit.
+The assembled repository is https://github.com/aryanvinju/TriadLens-Model-Auditing. PRs #1, #13, #14 and #15 contain all four contributions; CI run 43279363986 passed. Do not backdate these actions or use another person's account to commit.
 
 ## Proposed four-way file ownership
 
@@ -56,8 +59,8 @@ Before ZIP 04 merges, the repository owner adds `DOCKERHUB_USERNAME` (`aryanvinj
 | Playwright real-model | Browser loads a real disagreement case | Browser to local Flask to three saved models | 2 local Edge cases passed; screenshot in `test-results/` |
 | Playwright public fixture | Static fixture, with API responses explicitly mocked | Browser JavaScript rendering only | 1 local Edge case passed; suitable for data-free CI |
 | Pylint | Python source | Error-class static analysis | `python -m pylint --errors-only ...` passed locally on 3 November |
-| GitHub Actions | PR or push | Pytest, Pylint, Node syntax, Playwright fixture, Docker build | New-repository workflow result pending |
-| Docker Hub / Kubernetes | SHA-tagged source-only image plus private mounts | Container startup, probes and two-replica Service routing | Earlier image verified on 12 October; new-repository revision pending |
+| GitHub Actions | PR or push | Pytest, Pylint, Node syntax, Playwright fixture, Docker build | PASS: main run 43279363986 |
+| Docker Hub / Kubernetes | SHA-tagged source-only image plus private mounts | Container startup, probes and two-replica Service routing | PASS: current SHA image verified on 13 November, including 2/3/2 scaling |
 
 ## Commands after assembly
 

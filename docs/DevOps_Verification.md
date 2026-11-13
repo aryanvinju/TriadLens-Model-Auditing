@@ -1,33 +1,35 @@
-# DevOps verification — 12 October 2026
+# TriadLens DevOps verification
 
-## Current revision check - 2 November 2026
+Verified 13 November 2026 against application commit `bf87c5b096b54de26ce6fcf651bc28eeb253d3a7`. This record supersedes earlier deployment statements dated 12 October and 2-3 November.
 
-The audit/UI changes are still in the local working tree. The local automated suite passed 60/60 tests and JavaScript syntax passed. The local Flask readiness endpoint returned ready on port 5002. The Dockerfile was updated to copy the new `audit.py` module, which `app.py` imports. No current-revision Docker build or Kubernetes rollout was verified: the Docker daemon pipe was absent and this session could not read the Kubernetes configuration. The evidence below is retained as dated evidence for the earlier published revision, not as proof that the current audit features are in Docker Hub or Kubernetes.
+## Git, GitHub and contributor PRs
 
-## Browser and lint checks - 3 November 2026
-
-The current local source passed 60/60 Pytest cases, Pylint 4.1.3 error checks for five Python modules, and the Node.js syntax check. Playwright 1.62.1 ran in Microsoft Edge: two real-model browser cases passed, showing the input-processing-output flow, disagreement, saved-label comparison, four slices and one-field sensitivity; one explicitly mocked data-free browser case passed for public CI. The real browser screenshot is in the local ignored `test-results/` folder. The workflow now includes public Pytest, Pylint, JavaScript, Playwright fixture, Docker build/import, private-artifact exclusion and Docker Hub publication on successful main runs. There is no remote run or fresh image/cluster verification for this revision yet.
+The four merged contribution PRs are [#1](https://github.com/aryanvinju/TriadLens-Model-Auditing/pull/1) (Aryan, data/models), [#13](https://github.com/aryanvinju/TriadLens-Model-Auditing/pull/13) (Aditya, API/QML), [#14](https://github.com/aryanvinju/TriadLens-Model-Auditing/pull/14) (Avantika, UI/browser tests), and [#15](https://github.com/aryanvinju/TriadLens-Model-Auditing/pull/15) (Apeksha, quality/DevOps/docs). PR #12 was closed unmerged and superseded by #13. No submitted human reviews were found when checked on 13 November; a merge is not a review record.
 
 ## GitHub Actions and Docker Hub
 
-- [Main run 38201577529](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38201577529) completed successfully after PR #1 was merged. Test, container and publish jobs passed.
-- The publish log shows pushes of `aryanvinju/se_miniproj:0cf74d38d7729b70ff8a66c9588400286f6d0aea` and `aryanvinju/se_miniproj:latest`.
-- The pushed and locally pulled image digest was `sha256:ecbd5049e833911c3db2b09d0395d207a32797b2ef87b8235e233af3373d0e87`.
-- After the plain black-on-white UI was merged, [main run 38203322240](https://github.com/aryanvinju/SE_MINPROJ/actions/runs/38203322240) passed and pushed `aryanvinju/se_miniproj:b465cb7535d3a544f649d29cea827ed1fae26933` and `:latest`, digest `sha256:5d299e742b84031632955994dfa2894e3282e3394b8c13f33d73945321199b95`.
+[Main run 43279363986](https://github.com/aryanvinju/TriadLens-Model-Auditing/actions/runs/43279363986) passed test, browser-test, container and publish jobs. Public CI ran four Pytest checks, Pylint error checks, JavaScript syntax and one explicitly mocked Playwright browser flow. It built the image, imported app/audit, checked private artifact exclusions and published the SHA and latest tags.
 
-## Docker runtime
+Image: `aryanvinju/se_miniproj:bf87c5b096b54de26ce6fcf651bc28eeb253d3a7`.
 
-- `docker pull` of the SHA tag completed with the same digest.
-- Inspection of the unmounted image returned `data_csv False`, `models ['README.md']` and `reports ['README.md', 'dl_training_history.csv']`. The private survey rows and saved model files were absent.
-- A container run on `127.0.0.1:5001` with local `models` and `reports` mounted read only returned `{"status":"ready"}` from `/health/ready`.
-- POST `/api/predict` using `reports/example_request.json` returned ML, DL and QML labels, all `YES`, with `agreement_count: 3`.
+Digest: `sha256:5f05c94b14817dbd64efebd3f9841cf298a80848f5b2a354ad905d1e6b1ccd31`.
 
-## Docker Desktop Kubernetes
+The local pull returned that same digest. The unmounted image lacks lungcancer.csv, qml.joblib and metrics.json. Private artifacts are mounted separately.
 
-- Context: `docker-desktop`; node `desktop-control-plane` was Ready. All resources were created in namespace `lung-lab`.
-- Two Kubernetes Secrets supplied the local model and report artifacts to the source-only image. The manifest's two Pods became `1/1 Running`; the Service's `/health/ready` returned ready and POST `/api/predict` returned the three model results.
-- Scaling to three replicas produced three ready Pods; scaling back produced two ready Pods.
-- Pod `lung-lab-855cc58c-hhtw2` was deleted. Deployment created `lung-lab-855cc58c-btg9m`, which became ready. The port forward attached to the deleted Pod closed; after reconnecting, the Service prediction worked.
-- The deployment was then updated to the simplified UI image tag `b465cb7535d3a544f649d29cea827ed1fae26933`. Rollout completed with two ready Pods. The Service returned the new `TriadLens — model comparison` page and an ML/DL/QML prediction.
+## Full local verification
 
-These are observed local and remote checks, not a claim of public cluster deployment or clinical validation. Browser case ST16 also passed in the local portal: example loading, ALL and individual model views, and required-input feedback. ST17 passed keyboard focus and a 375 px viewport with no horizontal overflow; 200 percent zoom was not independently verified.
+Models were regenerated from the local CSV with the merged train.py. Cleaning gives 274 records after 33 duplicate and two conflicting rows are removed; split counts are 175/44/55. All 60 Python tests passed in 6.30 seconds. Pylint error checks and JavaScript syntax passed. Installed Edge passed two actual-model browser cases and one public fixture case. Initial attempts encountered unavailable temporary-directory/browser paths; using a workspace temporary directory and installed Edge resolved those environment issues.
+
+Local Python uses NumPy 2.2.6; the pinned container environment uses NumPy 2.3.3. The model and audit tests pass locally and the published container returns predictions. This does not establish a fresh Windows dependency installation.
+
+## Docker runtime and Kubernetes
+
+Docker container triadlens-verification-20261113 runs the exact SHA image on loopback port 5003 with read-only local models and reports. Readiness returns ready and POST /api/predict returns ML, DL and QML.
+
+The docker-desktop cluster runs the same image in namespace lung-lab. The manifest specifies non-root execution, a read-only root filesystem, CPU/memory limits, health probes and read-only Secret mounts. Two new Pods became ready. Service port-forward on loopback port 5005 returns readiness and all three predictions. Scaling to three ready replicas and back to two succeeded. The final desired replica count is two.
+
+Reproduce with `powershell -File tools/verify_deployment.ps1` after provisioning trusted local artifacts. Do not run it twice without first stopping/removing the previous named verification container. Local evidence is output/verification/deployment.json, image-digest.json, pods-two.json and pods-three.json. Those detailed machine artifacts remain in the private submission.
+
+## Remaining human acceptance
+
+Teammates must review the contribution/verification changes and record an acceptance decision. The team should provide its own narration and confirm the submitted revision. The original October sprint dates are retained as planned dates; November checks are not backdated.
